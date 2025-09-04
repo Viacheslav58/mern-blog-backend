@@ -22,3 +22,7 @@ export const postCreateValidation = [
     body('tags', 'Неверный формат тегов(укажите массив)').optional().isString(),
     body('imageUrl', 'Неверная ссылка на изображение').optional().isString(),
 ];
+
+export const reviewCreateValidation = [
+    body('text', 'Введите текст отзыва').isLength({ min: 3 }).isString(),
+];
