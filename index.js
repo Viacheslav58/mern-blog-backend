@@ -2,15 +2,23 @@ import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
 
+import fs from 'fs';
+import path from 'path';
+
 import mongoose from 'mongoose';
 import {
     registerValidation,
     loginValidation,
     postCreateValidation,
+    reviewCreateValidation,
 } from './validations.js';
 import { handleValidationErrors, checkAuth } from './utils/index.js';
 
-import { UserController, PostController } from './controllers/index.js';
+import {
+    UserController,
+    PostController,
+    ReviewController,
+} from './controllers/index.js';
 
 mongoose
     .connect(
@@ -59,9 +67,31 @@ app.post('/upload', checkAuth, upload.single('image'), (req, res) => {
     });
 });
 
+app.delete('/upload/:filename', (req, res) => {
+    try {
+        const filename = req.params.filename;
+        const filePath = path.join(process.cwd(), 'uploads', filename);
+
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            return res.json({ success: true });
+        } else {
+            return res.status(404).json({ message: 'Файл не найден' });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Ошибка при удалении файла' });
+    }
+});
+
 app.get('/tags', PostController.getLastTags);
 
 app.get('/posts', PostController.getAll);
+// app.get('/posts', PostController.getAllPag);
+
+app.get('/posts/popular', PostController.getPopular);
+app.get('/posts/tag/:tag', PostController.getByTag);
+
 app.get('/posts/tags', PostController.getLastTags); //??
 
 app.get('/posts/:id', PostController.getOne);
@@ -80,6 +110,17 @@ app.patch(
     handleValidationErrors,
     PostController.update
 );
+
+//reviews
+app.get('/reviews', ReviewController.getLastReviews);
+app.post(
+    '/reviews/:postid',
+    checkAuth,
+    reviewCreateValidation,
+    handleValidationErrors,
+    ReviewController.create
+);
+app.delete('/reviews/post/:id', checkAuth, ReviewController.removeByPost);
 
 app.listen(4444, (err) => {
     if (err) {
