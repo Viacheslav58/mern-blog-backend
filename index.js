@@ -87,9 +87,11 @@ app.delete('/upload/:filename', (req, res) => {
 app.get('/tags', PostController.getLastTags);
 
 app.get('/posts', PostController.getAll);
-// app.get('/posts', PostController.getAllPag);
+app.get('/posts/pag', PostController.getAllPaginated);
 
 app.get('/posts/popular', PostController.getPopular);
+app.get('/posts/popular/pag', PostController.getPopularPaginated);
+
 app.get('/posts/tag/:tag', PostController.getByTag);
 
 app.get('/posts/tags', PostController.getLastTags); //??
