@@ -20,7 +20,8 @@ export const getAll = async (req, res) => {
                 path: 'reviews',
                 populate: { path: 'user', select: 'fullName avatarUrl' }, // авторы отзывов
                 options: { sort: { createdAt: -1 } }, // сортировка отзывов
-            });
+            })
+            .sort({ createdAt: -1 }); // сортировка постов от новых к старым
 
         res.json(posts);
     } catch (err) {
@@ -32,7 +33,7 @@ export const getAll = async (req, res) => {
 };
 
 // GET /posts?page=2&limit=5
-export const getAllPag = async (req, res) => {
+export const getAllPaginated = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 5;
@@ -82,6 +83,37 @@ export const getPopular = async (req, res) => {
         res.status(500).json({
             message: 'Не удалось получить статьи',
         });
+    }
+};
+
+export const getPopularPaginated = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (page - 1) * limit;
+
+        const posts = await PostModel.find()
+            .sort({ viewsCount: -1 })
+            .skip(skip)
+            .limit(limit)
+            .populate('user')
+            .populate({
+                path: 'reviews',
+                populate: { path: 'user', select: 'fullName avatarUrl' }, // авторы отзывов
+                options: { sort: { createdAt: -1 } }, // сортировка отзывов
+            });
+
+        const total = await PostModel.countDocuments();
+
+        res.json({
+            posts,
+            total,
+            page,
+            pages: Math.ceil(total / limit),
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: 'Не удалось получить статьи' });
     }
 };
 
